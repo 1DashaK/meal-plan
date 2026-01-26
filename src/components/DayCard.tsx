@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { Copy, Check } from 'lucide-react';
+import { Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { DayPlan, MealType, Recipe, MealItem, DAY_NAMES, MEAL_TYPES } from '@/types/mealPlanner';
+import { DayPlan, MealType, Recipe, MealItem, DAY_NAMES, MEAL_TYPES, BaseIngredient } from '@/types/mealPlanner';
 import { NutritionBadges } from '@/components/NutritionBadges';
 import { RecipeSelectorModal } from '@/components/RecipeSelectorModal';
 import { calculateMealNutrition, calculateDayNutrition, emptyNutrition } from '@/utils/nutrition';
@@ -10,6 +10,7 @@ interface DayCardProps {
   dayIndex: number;
   dayPlan: DayPlan;
   recipes: Recipe[];
+  ingredientBase: BaseIngredient[];
   onUpdateMeal: (mealType: MealType, items: MealItem[]) => void;
   onCopyMeal: (mealType: MealType, targetDayIndex: number) => void;
   allDayPlans: { [dayIndex: number]: DayPlan };
@@ -33,6 +34,7 @@ export function DayCard({
   dayIndex,
   dayPlan,
   recipes,
+  ingredientBase,
   onUpdateMeal,
   onCopyMeal,
   allDayPlans,
@@ -41,7 +43,7 @@ export function DayCard({
   const [copyingMeal, setCopyingMeal] = useState<MealType | null>(null);
 
   const safeDayPlan = dayPlan || emptyDayPlan;
-  const dayNutrition = calculateDayNutrition(safeDayPlan, recipes);
+  const dayNutrition = calculateDayNutrition(safeDayPlan, recipes, ingredientBase);
 
   const handleMealClick = (mealType: MealType) => {
     setSelectedMealType(mealType);
@@ -73,7 +75,7 @@ export function DayCard({
       <div className="p-3 space-y-2">
         {MEAL_TYPES.map(({ key, label }) => {
           const mealItems = safeDayPlan[key] || [];
-          const mealNutrition = calculateMealNutrition(mealItems, recipes);
+          const mealNutrition = calculateMealNutrition(mealItems, recipes, ingredientBase);
           const hasMeals = mealItems.length > 0;
 
           return (
@@ -157,6 +159,7 @@ export function DayCard({
         onClose={() => setSelectedMealType(null)}
         onSave={handleSaveMeal}
         recipes={recipes}
+        ingredientBase={ingredientBase}
         currentItems={selectedMealType ? safeDayPlan[selectedMealType] || [] : []}
         mealType={selectedMealType || 'breakfast'}
       />

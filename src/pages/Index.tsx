@@ -1,17 +1,20 @@
 import { useState } from 'react';
-import { Plus, ChevronLeft, ChevronRight, UtensilsCrossed, CalendarDays, ShoppingCart } from 'lucide-react';
+import { Plus, ChevronLeft, ChevronRight, UtensilsCrossed, CalendarDays, ShoppingCart, Apple } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
-import { Recipe, DayPlan, MealType, MealItem, WeekPlan, DAY_NAMES } from '@/types/mealPlanner';
+import { Recipe, DayPlan, MealType, MealItem, WeekPlan, DAY_NAMES, BaseIngredient } from '@/types/mealPlanner';
 import { RecipeForm } from '@/components/RecipeForm';
 import { RecipeCard } from '@/components/RecipeCard';
 import { DayCard } from '@/components/DayCard';
 import { ShoppingList } from '@/components/ShoppingList';
 import { NutritionBadges } from '@/components/NutritionBadges';
+import { IngredientForm } from '@/components/IngredientForm';
+import { IngredientCard } from '@/components/IngredientCard';
+import { TagFilter } from '@/components/TagFilter';
 import { getCurrentWeekKey, getWeekRange, navigateWeek } from '@/utils/weekUtils';
 import { calculateDayNutrition, emptyNutrition } from '@/utils/nutrition';
 
-type TabType = 'recipes' | 'plan' | 'shopping';
+type TabType = 'ingredients' | 'recipes' | 'plan' | 'shopping';
 
 const emptyDayPlan: DayPlan = {
   breakfast: [],
@@ -22,13 +25,42 @@ const emptyDayPlan: DayPlan = {
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState<TabType>('plan');
+  const [ingredientBase, setIngredientBase] = useLocalStorage<BaseIngredient[]>('meal-planner-ingredient-base', []);
   const [recipes, setRecipes] = useLocalStorage<Recipe[]>('meal-planner-recipes', []);
+  const [recipeTags, setRecipeTags] = useLocalStorage<string[]>('meal-planner-recipe-tags', []);
   const [weekPlans, setWeekPlans] = useLocalStorage<WeekPlan>('meal-planner-week-plans', {});
   const [currentWeekKey, setCurrentWeekKey] = useState(getCurrentWeekKey());
+  
+  // Ingredients state
+  const [showIngredientForm, setShowIngredientForm] = useState(false);
+  const [editingIngredient, setEditingIngredient] = useState<BaseIngredient | null>(null);
+  
+  // Recipes state
   const [showRecipeForm, setShowRecipeForm] = useState(false);
   const [editingRecipe, setEditingRecipe] = useState<Recipe | null>(null);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
   const currentWeekPlan = weekPlans[currentWeekKey] || {};
+
+  // Ingredient handlers
+  const handleSaveIngredient = (ingredient: BaseIngredient) => {
+    if (editingIngredient) {
+      setIngredientBase(ingredientBase.map((i) => (i.id === ingredient.id ? ingredient : i)));
+    } else {
+      setIngredientBase([...ingredientBase, ingredient]);
+    }
+    setShowIngredientForm(false);
+    setEditingIngredient(null);
+  };
+
+  const handleEditIngredient = (ingredient: BaseIngredient) => {
+    setEditingIngredient(ingredient);
+    setShowIngredientForm(true);
+  };
+
+  const handleDeleteIngredient = (ingredientId: string) => {
+    setIngredientBase(ingredientBase.filter((i) => i.id !== ingredientId));
+  };
 
   // Recipe handlers
   const handleSaveRecipe = (recipe: Recipe) => {
@@ -49,6 +81,24 @@ const Index = () => {
   const handleDeleteRecipe = (recipeId: string) => {
     setRecipes(recipes.filter((r) => r.id !== recipeId));
   };
+
+  const handleNewTag = (tag: string) => {
+    if (!recipeTags.includes(tag)) {
+      setRecipeTags([...recipeTags, tag]);
+    }
+  };
+
+  const handleTagToggle = (tag: string) => {
+    if (selectedTags.includes(tag)) {
+      setSelectedTags(selectedTags.filter((t) => t !== tag));
+    } else {
+      setSelectedTags([...selectedTags, tag]);
+    }
+  };
+
+  const filteredRecipes = selectedTags.length > 0
+    ? recipes.filter((recipe) => selectedTags.every((tag) => recipe.tags?.includes(tag)))
+    : recipes;
 
   // Week plan handlers
   const handleUpdateMeal = (dayIndex: number, mealType: MealType, items: MealItem[]) => {
@@ -74,7 +124,7 @@ const Index = () => {
     (acc, _, dayIndex) => {
       const dayPlan = currentWeekPlan[dayIndex];
       if (!dayPlan) return acc;
-      const dayNutrition = calculateDayNutrition(dayPlan, recipes);
+      const dayNutrition = calculateDayNutrition(dayPlan, recipes, ingredientBase);
       return {
         kcal: acc.kcal + dayNutrition.kcal,
         protein: Math.round((acc.protein + dayNutrition.protein) * 10) / 10,
@@ -88,6 +138,7 @@ const Index = () => {
   );
 
   const tabs = [
+    { key: 'ingredients' as TabType, label: 'Ингр.', icon: Apple },
     { key: 'recipes' as TabType, label: 'Рецепты', icon: UtensilsCrossed },
     { key: 'plan' as TabType, label: 'План', icon: CalendarDays },
     { key: 'shopping' as TabType, label: 'Покупки', icon: ShoppingCart },
@@ -106,6 +157,50 @@ const Index = () => {
 
       {/* Tab Content */}
       <main className="container py-4">
+        {/* Ingredients Tab */}
+        {activeTab === 'ingredients' && (
+          <div className="space-y-4 animate-fade-in">
+            {showIngredientForm ? (
+              <IngredientForm
+                onSave={handleSaveIngredient}
+                onCancel={() => {
+                  setShowIngredientForm(false);
+                  setEditingIngredient(null);
+                }}
+                initialIngredient={editingIngredient || undefined}
+              />
+            ) : (
+              <>
+                <Button
+                  onClick={() => setShowIngredientForm(true)}
+                  className="w-full h-12 gap-2"
+                >
+                  <Plus className="w-5 h-5" />
+                  Добавить ингредиент
+                </Button>
+
+                {ingredientBase.length === 0 ? (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <p className="text-lg">Нет ингредиентов</p>
+                    <p className="text-sm">Добавьте свой первый ингредиент</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {ingredientBase.map((ingredient) => (
+                      <IngredientCard
+                        key={ingredient.id}
+                        ingredient={ingredient}
+                        onEdit={() => handleEditIngredient(ingredient)}
+                        onDelete={() => handleDeleteIngredient(ingredient.id)}
+                      />
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        )}
+
         {/* Recipes Tab */}
         {activeTab === 'recipes' && (
           <div className="space-y-4 animate-fade-in">
@@ -117,6 +212,9 @@ const Index = () => {
                   setEditingRecipe(null);
                 }}
                 initialRecipe={editingRecipe || undefined}
+                ingredientBase={ingredientBase}
+                availableTags={recipeTags}
+                onNewTag={handleNewTag}
               />
             ) : (
               <>
@@ -128,17 +226,29 @@ const Index = () => {
                   Добавить рецепт
                 </Button>
 
-                {recipes.length === 0 ? (
+                <TagFilter
+                  allTags={recipeTags}
+                  selectedTags={selectedTags}
+                  onTagToggle={handleTagToggle}
+                  onReset={() => setSelectedTags([])}
+                />
+
+                {filteredRecipes.length === 0 ? (
                   <div className="text-center py-12 text-muted-foreground">
-                    <p className="text-lg">Нет рецептов</p>
-                    <p className="text-sm">Добавьте свой первый рецепт</p>
+                    <p className="text-lg">
+                      {recipes.length === 0 ? 'Нет рецептов' : 'Нет рецептов с выбранными метками'}
+                    </p>
+                    <p className="text-sm">
+                      {recipes.length === 0 ? 'Добавьте свой первый рецепт' : 'Попробуйте сбросить фильтры'}
+                    </p>
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {recipes.map((recipe) => (
+                    {filteredRecipes.map((recipe) => (
                       <RecipeCard
                         key={recipe.id}
                         recipe={recipe}
+                        ingredientBase={ingredientBase}
                         onEdit={() => handleEditRecipe(recipe)}
                         onDelete={() => handleDeleteRecipe(recipe.id)}
                       />
@@ -183,6 +293,7 @@ const Index = () => {
                   dayIndex={dayIndex}
                   dayPlan={currentWeekPlan[dayIndex] || emptyDayPlan}
                   recipes={recipes}
+                  ingredientBase={ingredientBase}
                   onUpdateMeal={(mealType, items) =>
                     handleUpdateMeal(dayIndex, mealType, items)
                   }
@@ -205,7 +316,11 @@ const Index = () => {
         {/* Shopping Tab */}
         {activeTab === 'shopping' && (
           <div className="animate-fade-in">
-            <ShoppingList weekPlan={currentWeekPlan} recipes={recipes} />
+            <ShoppingList 
+              weekPlan={currentWeekPlan} 
+              recipes={recipes} 
+              ingredientBase={ingredientBase}
+            />
           </div>
         )}
       </main>

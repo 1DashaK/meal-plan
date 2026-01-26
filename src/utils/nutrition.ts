@@ -1,21 +1,32 @@
-import { Ingredient, Recipe, NutritionInfo, MealItem, DayPlan } from '@/types/mealPlanner';
+import { BaseIngredient, Recipe, NutritionInfo, MealItem, DayPlan, RecipeIngredient } from '@/types/mealPlanner';
 
-export function calculateIngredientNutrition(ingredient: Ingredient): NutritionInfo {
-  const multiplier = ingredient.weight / 100;
+export function calculateIngredientNutrition(
+  recipeIngredient: RecipeIngredient,
+  ingredientBase: BaseIngredient[]
+): NutritionInfo {
+  const baseIng = ingredientBase.find((i) => i.id === recipeIngredient.ingredientId);
+  if (!baseIng) {
+    return { kcal: 0, protein: 0, fat: 0, carbs: 0, fiber: 0, weight: recipeIngredient.weight };
+  }
+  
+  const multiplier = recipeIngredient.weight / 100;
   return {
-    kcal: Math.round(ingredient.kcalPer100 * multiplier),
-    protein: Math.round(ingredient.proteinPer100 * multiplier * 10) / 10,
-    fat: Math.round(ingredient.fatPer100 * multiplier * 10) / 10,
-    carbs: Math.round(ingredient.carbsPer100 * multiplier * 10) / 10,
-    fiber: Math.round(ingredient.fiberPer100 * multiplier * 10) / 10,
-    weight: ingredient.weight,
+    kcal: Math.round(baseIng.kcalPer100 * multiplier),
+    protein: Math.round(baseIng.proteinPer100 * multiplier * 10) / 10,
+    fat: Math.round(baseIng.fatPer100 * multiplier * 10) / 10,
+    carbs: Math.round(baseIng.carbsPer100 * multiplier * 10) / 10,
+    fiber: Math.round(baseIng.fiberPer100 * multiplier * 10) / 10,
+    weight: recipeIngredient.weight,
   };
 }
 
-export function calculateRecipeNutrition(recipe: Recipe): NutritionInfo {
+export function calculateRecipeNutrition(
+  recipe: Recipe,
+  ingredientBase: BaseIngredient[]
+): NutritionInfo {
   return recipe.ingredients.reduce(
     (acc, ing) => {
-      const ingNutrition = calculateIngredientNutrition(ing);
+      const ingNutrition = calculateIngredientNutrition(ing, ingredientBase);
       return {
         kcal: acc.kcal + ingNutrition.kcal,
         protein: Math.round((acc.protein + ingNutrition.protein) * 10) / 10,
@@ -31,9 +42,13 @@ export function calculateRecipeNutrition(recipe: Recipe): NutritionInfo {
 
 export function calculatePortionNutrition(
   recipe: Recipe,
-  portionWeight: number
+  portionWeight: number,
+  ingredientBase: BaseIngredient[]
 ): NutritionInfo {
-  const totalNutrition = calculateRecipeNutrition(recipe);
+  const totalNutrition = calculateRecipeNutrition(recipe, ingredientBase);
+  if (totalNutrition.weight === 0) {
+    return emptyNutrition();
+  }
   const ratio = portionWeight / totalNutrition.weight;
   
   return {
@@ -48,14 +63,15 @@ export function calculatePortionNutrition(
 
 export function calculateMealNutrition(
   mealItems: MealItem[],
-  recipes: Recipe[]
+  recipes: Recipe[],
+  ingredientBase: BaseIngredient[]
 ): NutritionInfo {
   return mealItems.reduce(
     (acc, item) => {
       const recipe = recipes.find((r) => r.id === item.recipeId);
       if (!recipe) return acc;
       
-      const portionNutrition = calculatePortionNutrition(recipe, item.portionWeight);
+      const portionNutrition = calculatePortionNutrition(recipe, item.portionWeight, ingredientBase);
       return {
         kcal: acc.kcal + portionNutrition.kcal,
         protein: Math.round((acc.protein + portionNutrition.protein) * 10) / 10,
@@ -71,7 +87,8 @@ export function calculateMealNutrition(
 
 export function calculateDayNutrition(
   dayPlan: DayPlan,
-  recipes: Recipe[]
+  recipes: Recipe[],
+  ingredientBase: BaseIngredient[]
 ): NutritionInfo {
   const meals = [
     ...dayPlan.breakfast,
@@ -79,9 +96,14 @@ export function calculateDayNutrition(
     ...dayPlan.lunch,
     ...dayPlan.dinner,
   ];
-  return calculateMealNutrition(meals, recipes);
+  return calculateMealNutrition(meals, recipes, ingredientBase);
 }
 
 export function emptyNutrition(): NutritionInfo {
   return { kcal: 0, protein: 0, fat: 0, carbs: 0, fiber: 0, weight: 0 };
+}
+
+export function getIngredientName(ingredientId: string, ingredientBase: BaseIngredient[]): string {
+  const ing = ingredientBase.find((i) => i.id === ingredientId);
+  return ing?.name || 'Неизвестный ингредиент';
 }
