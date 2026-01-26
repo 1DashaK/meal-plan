@@ -1,17 +1,19 @@
 import { ChefHat, Edit2, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Recipe } from '@/types/mealPlanner';
+import { Badge } from '@/components/ui/badge';
+import { Recipe, BaseIngredient } from '@/types/mealPlanner';
 import { NutritionBadges } from '@/components/NutritionBadges';
 import { calculateRecipeNutrition } from '@/utils/nutrition';
 
 interface RecipeCardProps {
   recipe: Recipe;
+  ingredientBase: BaseIngredient[];
   onEdit: () => void;
   onDelete: () => void;
 }
 
-export function RecipeCard({ recipe, onEdit, onDelete }: RecipeCardProps) {
-  const nutrition = calculateRecipeNutrition(recipe);
+export function RecipeCard({ recipe, ingredientBase, onEdit, onDelete }: RecipeCardProps) {
+  const nutrition = calculateRecipeNutrition(recipe, ingredientBase);
 
   return (
     <div className="bg-card rounded-xl p-4 shadow-sm border border-border/50 space-y-3 animate-fade-in">
@@ -46,6 +48,16 @@ export function RecipeCard({ recipe, onEdit, onDelete }: RecipeCardProps) {
           </Button>
         </div>
       </div>
+
+      {recipe.tags && recipe.tags.length > 0 && (
+        <div className="flex flex-wrap gap-1">
+          {recipe.tags.map((tag) => (
+            <Badge key={tag} variant="secondary" className="text-xs px-2 py-0.5">
+              {tag}
+            </Badge>
+          ))}
+        </div>
+      )}
 
       <NutritionBadges nutrition={nutrition} />
 

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { X, Check, Plus, Minus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Recipe, MealItem, MealType } from '@/types/mealPlanner';
+import { Recipe, MealItem, MealType, BaseIngredient } from '@/types/mealPlanner';
 import { NutritionBadges } from '@/components/NutritionBadges';
 import { calculateRecipeNutrition, calculatePortionNutrition } from '@/utils/nutrition';
 
@@ -11,6 +11,7 @@ interface RecipeSelectorModalProps {
   onClose: () => void;
   onSave: (items: MealItem[]) => void;
   recipes: Recipe[];
+  ingredientBase: BaseIngredient[];
   currentItems: MealItem[];
   mealType: MealType;
 }
@@ -27,6 +28,7 @@ export function RecipeSelectorModal({
   onClose,
   onSave,
   recipes,
+  ingredientBase,
   currentItems,
   mealType,
 }: RecipeSelectorModalProps) {
@@ -39,7 +41,7 @@ export function RecipeSelectorModal({
     if (existing) {
       setSelectedItems(selectedItems.filter((item) => item.recipeId !== recipe.id));
     } else {
-      const totalWeight = calculateRecipeNutrition(recipe).weight;
+      const totalWeight = calculateRecipeNutrition(recipe, ingredientBase).weight;
       setSelectedItems([
         ...selectedItems,
         {
@@ -78,15 +80,15 @@ export function RecipeSelectorModal({
           {recipes.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <p>Нет рецептов</p>
-              <p className="text-sm">Добавьте рецепты во вкладке "Мои рецепты"</p>
+              <p className="text-sm">Добавьте рецепты во вкладке "Рецепты"</p>
             </div>
           ) : (
             recipes.map((recipe) => {
               const isSelected = selectedItems.some((item) => item.recipeId === recipe.id);
               const selectedItem = selectedItems.find((item) => item.recipeId === recipe.id);
-              const nutrition = calculateRecipeNutrition(recipe);
+              const nutrition = calculateRecipeNutrition(recipe, ingredientBase);
               const portionNutrition = selectedItem
-                ? calculatePortionNutrition(recipe, selectedItem.portionWeight)
+                ? calculatePortionNutrition(recipe, selectedItem.portionWeight, ingredientBase)
                 : null;
 
               return (

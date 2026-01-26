@@ -1,3 +1,21 @@
+// База ингредиентов (хранится отдельно в localStorage)
+export interface BaseIngredient {
+  id: string;
+  name: string;
+  kcalPer100: number;
+  proteinPer100: number;
+  fatPer100: number;
+  carbsPer100: number;
+  fiberPer100: number;
+}
+
+// Ингредиент в рецепте (ссылка на базу + вес)
+export interface RecipeIngredient {
+  ingredientId: string;
+  weight: number;
+}
+
+// Legacy формат для обратной совместимости
 export interface Ingredient {
   id: string;
   name: string;
@@ -12,8 +30,9 @@ export interface Ingredient {
 export interface Recipe {
   id: string;
   name: string;
-  ingredients: Ingredient[];
+  ingredients: RecipeIngredient[];
   instructions: string;
+  tags: string[];
   createdAt: number;
 }
 

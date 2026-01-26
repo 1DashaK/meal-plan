@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { Check } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Recipe, DayPlan, Ingredient } from '@/types/mealPlanner';
-import { calculateRecipeNutrition } from '@/utils/nutrition';
+import { Recipe, DayPlan, BaseIngredient } from '@/types/mealPlanner';
+import { calculateRecipeNutrition, getIngredientName } from '@/utils/nutrition';
 
 interface ShoppingListProps {
   weekPlan: { [dayIndex: number]: DayPlan } | undefined;
   recipes: Recipe[];
+  ingredientBase: BaseIngredient[];
 }
 
 interface ShoppingItem {
@@ -15,7 +16,7 @@ interface ShoppingItem {
   checked: boolean;
 }
 
-export function ShoppingList({ weekPlan, recipes }: ShoppingListProps) {
+export function ShoppingList({ weekPlan, recipes, ingredientBase }: ShoppingListProps) {
   const [checkedItems, setCheckedItems] = useState<Set<string>>(new Set());
 
   const aggregateIngredients = (): ShoppingItem[] => {
@@ -37,12 +38,13 @@ export function ShoppingList({ weekPlan, recipes }: ShoppingListProps) {
         const recipe = recipes.find((r) => r.id === mealItem.recipeId);
         if (!recipe) return;
 
-        const totalRecipeWeight = calculateRecipeNutrition(recipe).weight;
-        const ratio = mealItem.portionWeight / totalRecipeWeight;
+        const totalRecipeWeight = calculateRecipeNutrition(recipe, ingredientBase).weight;
+        const ratio = totalRecipeWeight > 0 ? mealItem.portionWeight / totalRecipeWeight : 0;
 
-        recipe.ingredients.forEach((ingredient) => {
-          const ingredientWeight = ingredient.weight * ratio;
-          const normalizedName = ingredient.name.toLowerCase().trim();
+        recipe.ingredients.forEach((recipeIngredient) => {
+          const ingredientName = getIngredientName(recipeIngredient.ingredientId, ingredientBase);
+          const ingredientWeight = recipeIngredient.weight * ratio;
+          const normalizedName = ingredientName.toLowerCase().trim();
           const existing = ingredientMap.get(normalizedName) || 0;
           ingredientMap.set(normalizedName, existing + ingredientWeight);
         });
