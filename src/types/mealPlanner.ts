@@ -7,6 +7,9 @@ export interface BaseIngredient {
   fatPer100: number;
   carbsPer100: number;
   fiberPer100: number;
+  mgPer100: number;
+  fePer100: number;
+  vitCPer100: number;
 }
 
 // Ингредиент в рецепте (ссылка на базу + вес)
@@ -43,12 +46,17 @@ export interface NutritionInfo {
   carbs: number;
   fiber: number;
   weight: number;
+  mg: number;
+  fe: number;
+  vitC: number;
 }
 
 export interface MealItem {
   recipeId: string;
   recipeName: string;
   portionWeight: number;
+  type?: 'recipe' | 'ingredient';
+  excludedIngredientIds?: string[];
 }
 
 export type MealType = 'breakfast' | 'snack' | 'lunch' | 'dinner';

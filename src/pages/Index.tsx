@@ -31,11 +31,8 @@ const Index = () => {
   const [weekPlans, setWeekPlans] = useLocalStorage<WeekPlan>('meal-planner-week-plans', {});
   const [currentWeekKey, setCurrentWeekKey] = useState(getCurrentWeekKey());
   
-  // Ingredients state
   const [showIngredientForm, setShowIngredientForm] = useState(false);
   const [editingIngredient, setEditingIngredient] = useState<BaseIngredient | null>(null);
-  
-  // Recipes state
   const [showRecipeForm, setShowRecipeForm] = useState(false);
   const [editingRecipe, setEditingRecipe] = useState<Recipe | null>(null);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -119,7 +116,6 @@ const Index = () => {
     handleUpdateMeal(targetDayIndex, mealType, [...sourceMeal]);
   };
 
-  // Calculate week totals
   const weekTotals = DAY_NAMES.reduce(
     (acc, _, dayIndex) => {
       const dayPlan = currentWeekPlan[dayIndex];
@@ -131,6 +127,9 @@ const Index = () => {
         fat: Math.round((acc.fat + dayNutrition.fat) * 10) / 10,
         carbs: Math.round((acc.carbs + dayNutrition.carbs) * 10) / 10,
         fiber: Math.round((acc.fiber + dayNutrition.fiber) * 10) / 10,
+        mg: Math.round((acc.mg + dayNutrition.mg) * 10) / 10,
+        fe: Math.round((acc.fe + dayNutrition.fe) * 10) / 10,
+        vitC: Math.round((acc.vitC + dayNutrition.vitC) * 10) / 10,
         weight: acc.weight + dayNutrition.weight,
       };
     },
@@ -146,7 +145,6 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      {/* Header */}
       <header className="sticky top-0 z-40 bg-background/95 backdrop-blur border-b">
         <div className="container py-3">
           <h1 className="text-xl font-bold text-foreground flex items-center gap-2">
@@ -155,30 +153,20 @@ const Index = () => {
         </div>
       </header>
 
-      {/* Tab Content */}
       <main className="container py-4">
-        {/* Ingredients Tab */}
         {activeTab === 'ingredients' && (
           <div className="space-y-4 animate-fade-in">
             {showIngredientForm ? (
               <IngredientForm
                 onSave={handleSaveIngredient}
-                onCancel={() => {
-                  setShowIngredientForm(false);
-                  setEditingIngredient(null);
-                }}
+                onCancel={() => { setShowIngredientForm(false); setEditingIngredient(null); }}
                 initialIngredient={editingIngredient || undefined}
               />
             ) : (
               <>
-                <Button
-                  onClick={() => setShowIngredientForm(true)}
-                  className="w-full h-12 gap-2"
-                >
-                  <Plus className="w-5 h-5" />
-                  Добавить ингредиент
+                <Button onClick={() => setShowIngredientForm(true)} className="w-full h-12 gap-2">
+                  <Plus className="w-5 h-5" /> Добавить ингредиент
                 </Button>
-
                 {ingredientBase.length === 0 ? (
                   <div className="text-center py-12 text-muted-foreground">
                     <p className="text-lg">Нет ингредиентов</p>
@@ -187,12 +175,9 @@ const Index = () => {
                 ) : (
                   <div className="space-y-3">
                     {ingredientBase.map((ingredient) => (
-                      <IngredientCard
-                        key={ingredient.id}
-                        ingredient={ingredient}
+                      <IngredientCard key={ingredient.id} ingredient={ingredient}
                         onEdit={() => handleEditIngredient(ingredient)}
-                        onDelete={() => handleDeleteIngredient(ingredient.id)}
-                      />
+                        onDelete={() => handleDeleteIngredient(ingredient.id)} />
                     ))}
                   </div>
                 )}
@@ -201,57 +186,30 @@ const Index = () => {
           </div>
         )}
 
-        {/* Recipes Tab */}
         {activeTab === 'recipes' && (
           <div className="space-y-4 animate-fade-in">
             {showRecipeForm ? (
-              <RecipeForm
-                onSave={handleSaveRecipe}
-                onCancel={() => {
-                  setShowRecipeForm(false);
-                  setEditingRecipe(null);
-                }}
+              <RecipeForm onSave={handleSaveRecipe}
+                onCancel={() => { setShowRecipeForm(false); setEditingRecipe(null); }}
                 initialRecipe={editingRecipe || undefined}
-                ingredientBase={ingredientBase}
-                availableTags={recipeTags}
-                onNewTag={handleNewTag}
-              />
+                ingredientBase={ingredientBase} availableTags={recipeTags} onNewTag={handleNewTag} />
             ) : (
               <>
-                <Button
-                  onClick={() => setShowRecipeForm(true)}
-                  className="w-full h-12 gap-2"
-                >
-                  <Plus className="w-5 h-5" />
-                  Добавить рецепт
+                <Button onClick={() => setShowRecipeForm(true)} className="w-full h-12 gap-2">
+                  <Plus className="w-5 h-5" /> Добавить рецепт
                 </Button>
-
-                <TagFilter
-                  allTags={recipeTags}
-                  selectedTags={selectedTags}
-                  onTagToggle={handleTagToggle}
-                  onReset={() => setSelectedTags([])}
-                />
-
+                <TagFilter allTags={recipeTags} selectedTags={selectedTags}
+                  onTagToggle={handleTagToggle} onReset={() => setSelectedTags([])} />
                 {filteredRecipes.length === 0 ? (
                   <div className="text-center py-12 text-muted-foreground">
-                    <p className="text-lg">
-                      {recipes.length === 0 ? 'Нет рецептов' : 'Нет рецептов с выбранными метками'}
-                    </p>
-                    <p className="text-sm">
-                      {recipes.length === 0 ? 'Добавьте свой первый рецепт' : 'Попробуйте сбросить фильтры'}
-                    </p>
+                    <p className="text-lg">{recipes.length === 0 ? 'Нет рецептов' : 'Нет рецептов с выбранными метками'}</p>
+                    <p className="text-sm">{recipes.length === 0 ? 'Добавьте свой первый рецепт' : 'Попробуйте сбросить фильтры'}</p>
                   </div>
                 ) : (
                   <div className="space-y-3">
                     {filteredRecipes.map((recipe) => (
-                      <RecipeCard
-                        key={recipe.id}
-                        recipe={recipe}
-                        ingredientBase={ingredientBase}
-                        onEdit={() => handleEditRecipe(recipe)}
-                        onDelete={() => handleDeleteRecipe(recipe.id)}
-                      />
+                      <RecipeCard key={recipe.id} recipe={recipe} ingredientBase={ingredientBase}
+                        onEdit={() => handleEditRecipe(recipe)} onDelete={() => handleDeleteRecipe(recipe.id)} />
                     ))}
                   </div>
                 )}
@@ -260,52 +218,33 @@ const Index = () => {
           </div>
         )}
 
-        {/* Plan Tab */}
         {activeTab === 'plan' && (
           <div className="space-y-4 animate-fade-in">
-            {/* Week Navigation */}
             <div className="flex items-center justify-between bg-card rounded-xl p-3 shadow-sm border border-border/50">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setCurrentWeekKey(navigateWeek(currentWeekKey, 'prev'))}
-              >
+              <Button variant="ghost" size="icon" onClick={() => setCurrentWeekKey(navigateWeek(currentWeekKey, 'prev'))}>
                 <ChevronLeft className="w-5 h-5" />
               </Button>
               <div className="text-center">
                 <p className="text-xs text-muted-foreground">Текущая неделя</p>
                 <p className="font-semibold">{getWeekRange(currentWeekKey)}</p>
               </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setCurrentWeekKey(navigateWeek(currentWeekKey, 'next'))}
-              >
+              <Button variant="ghost" size="icon" onClick={() => setCurrentWeekKey(navigateWeek(currentWeekKey, 'next'))}>
                 <ChevronRight className="w-5 h-5" />
               </Button>
             </div>
 
-            {/* Days Grid */}
             <div className="space-y-4">
               {DAY_NAMES.map((_, dayIndex) => (
-                <DayCard
-                  key={dayIndex}
-                  dayIndex={dayIndex}
+                <DayCard key={dayIndex} dayIndex={dayIndex}
                   dayPlan={currentWeekPlan[dayIndex] || emptyDayPlan}
-                  recipes={recipes}
-                  ingredientBase={ingredientBase}
-                  onUpdateMeal={(mealType, items) =>
-                    handleUpdateMeal(dayIndex, mealType, items)
-                  }
-                  onCopyMeal={(mealType, targetDayIndex) =>
-                    handleCopyMeal(dayIndex, mealType, targetDayIndex)
-                  }
+                  recipes={recipes} ingredientBase={ingredientBase}
+                  onUpdateMeal={(mealType, items) => handleUpdateMeal(dayIndex, mealType, items)}
+                  onCopyMeal={(mealType, targetDayIndex) => handleCopyMeal(dayIndex, mealType, targetDayIndex)}
                   allDayPlans={currentWeekPlan}
-                />
+                  allTags={recipeTags} />
               ))}
             </div>
 
-            {/* Week Totals */}
             <div className="bg-primary/10 rounded-xl p-4 space-y-2">
               <h3 className="font-bold text-foreground">Итого за неделю:</h3>
               <NutritionBadges nutrition={weekTotals} showWeight />
@@ -313,19 +252,13 @@ const Index = () => {
           </div>
         )}
 
-        {/* Shopping Tab */}
         {activeTab === 'shopping' && (
           <div className="animate-fade-in">
-            <ShoppingList 
-              weekPlan={currentWeekPlan} 
-              recipes={recipes} 
-              ingredientBase={ingredientBase}
-            />
+            <ShoppingList weekPlan={currentWeekPlan} recipes={recipes} ingredientBase={ingredientBase} />
           </div>
         )}
       </main>
 
-      {/* Bottom Navigation */}
       <nav className="fixed bottom-0 left-0 right-0 bg-card border-t shadow-lg">
         <div className="container">
           <div className="flex">
@@ -333,15 +266,10 @@ const Index = () => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.key;
               return (
-                <button
-                  key={tab.key}
-                  onClick={() => setActiveTab(tab.key)}
+                <button key={tab.key} onClick={() => setActiveTab(tab.key)}
                   className={`flex-1 flex flex-col items-center gap-1 py-3 transition-colors ${
-                    isActive
-                      ? 'text-primary'
-                      : 'text-muted-foreground'
-                  }`}
-                >
+                    isActive ? 'text-primary' : 'text-muted-foreground'
+                  }`}>
                   <Icon className={`w-5 h-5 ${isActive ? 'scale-110' : ''} transition-transform`} />
                   <span className="text-xs font-medium">{tab.label}</span>
                 </button>
