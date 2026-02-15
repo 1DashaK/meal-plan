@@ -9,6 +9,8 @@ interface IngredientCardProps {
 }
 
 export function IngredientCard({ ingredient, onEdit, onDelete }: IngredientCardProps) {
+  const hasMicro = (ingredient.mgPer100 || 0) > 0 || (ingredient.fePer100 || 0) > 0 || (ingredient.vitCPer100 || 0) > 0;
+
   return (
     <div className="bg-card rounded-xl p-4 shadow-sm border border-border/50 animate-fade-in">
       <div className="flex items-start justify-between">
@@ -21,15 +23,15 @@ export function IngredientCard({ ingredient, onEdit, onDelete }: IngredientCardP
             <p className="text-xs text-muted-foreground">
               {ingredient.kcalPer100} ккал • Б:{ingredient.proteinPer100} Ж:{ingredient.fatPer100} У:{ingredient.carbsPer100}
             </p>
+            {hasMicro && (
+              <p className="text-xs text-muted-foreground">
+                Mg:{ingredient.mgPer100 || 0}мг Fe:{ingredient.fePer100 || 0}мг C:{ingredient.vitCPer100 || 0}мг
+              </p>
+            )}
           </div>
         </div>
         <div className="flex gap-1">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onEdit}
-            className="h-8 w-8"
-          >
+          <Button variant="ghost" size="icon" onClick={onEdit} className="h-8 w-8">
             <Edit2 className="w-4 h-4" />
           </Button>
           <Button

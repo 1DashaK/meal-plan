@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { DayPlan, MealType, Recipe, MealItem, DAY_NAMES, MEAL_TYPES, BaseIngredient } from '@/types/mealPlanner';
 import { NutritionBadges } from '@/components/NutritionBadges';
 import { RecipeSelectorModal } from '@/components/RecipeSelectorModal';
-import { calculateMealNutrition, calculateDayNutrition, emptyNutrition } from '@/utils/nutrition';
+import { calculateMealNutrition, calculateDayNutrition } from '@/utils/nutrition';
 
 interface DayCardProps {
   dayIndex: number;
@@ -14,6 +14,7 @@ interface DayCardProps {
   onUpdateMeal: (mealType: MealType, items: MealItem[]) => void;
   onCopyMeal: (mealType: MealType, targetDayIndex: number) => void;
   allDayPlans: { [dayIndex: number]: DayPlan };
+  allTags: string[];
 }
 
 const mealBgColors: Record<MealType, string> = {
@@ -38,6 +39,7 @@ export function DayCard({
   onUpdateMeal,
   onCopyMeal,
   allDayPlans,
+  allTags,
 }: DayCardProps) {
   const [selectedMealType, setSelectedMealType] = useState<MealType | null>(null);
   const [copyingMeal, setCopyingMeal] = useState<MealType | null>(null);
@@ -83,24 +85,14 @@ export function DayCard({
               <div className="flex items-center justify-between mb-2">
                 <span className="font-semibold text-sm">{label}</span>
                 {hasMeals && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleCopyClick(key);
-                    }}
-                  >
+                  <Button variant="ghost" size="icon" className="h-7 w-7"
+                    onClick={(e) => { e.stopPropagation(); handleCopyClick(key); }}>
                     <Copy className="w-3.5 h-3.5" />
                   </Button>
                 )}
               </div>
 
-              <div
-                className="cursor-pointer min-h-[40px]"
-                onClick={() => handleMealClick(key)}
-              >
+              <div className="cursor-pointer min-h-[40px]" onClick={() => handleMealClick(key)}>
                 {hasMeals ? (
                   <div className="space-y-1">
                     {mealItems.map((item, idx) => (
@@ -111,9 +103,7 @@ export function DayCard({
                     <NutritionBadges nutrition={mealNutrition} compact />
                   </div>
                 ) : (
-                  <p className="text-sm text-muted-foreground italic">
-                    + Добавить блюдо
-                  </p>
+                  <p className="text-sm text-muted-foreground italic">+ Добавить блюдо</p>
                 )}
               </div>
 
@@ -122,23 +112,13 @@ export function DayCard({
                   <p className="text-xs text-muted-foreground mb-2">Копировать в:</p>
                   <div className="flex flex-wrap gap-1">
                     {DAY_NAMES.map((dayName, idx) => (
-                      <Button
-                        key={idx}
-                        variant="outline"
-                        size="sm"
-                        className="h-7 text-xs"
-                        onClick={() => handleCopyToDay(idx)}
-                        disabled={idx === dayIndex}
-                      >
+                      <Button key={idx} variant="outline" size="sm" className="h-7 text-xs"
+                        onClick={() => handleCopyToDay(idx)} disabled={idx === dayIndex}>
                         {dayName}
                       </Button>
                     ))}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 text-xs"
-                      onClick={() => setCopyingMeal(null)}
-                    >
+                    <Button variant="ghost" size="sm" className="h-7 text-xs"
+                      onClick={() => setCopyingMeal(null)}>
                       Отмена
                     </Button>
                   </div>
@@ -162,6 +142,7 @@ export function DayCard({
         ingredientBase={ingredientBase}
         currentItems={selectedMealType ? safeDayPlan[selectedMealType] || [] : []}
         mealType={selectedMealType || 'breakfast'}
+        allTags={allTags}
       />
     </div>
   );

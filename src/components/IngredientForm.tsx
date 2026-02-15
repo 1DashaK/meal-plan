@@ -21,6 +21,9 @@ export function IngredientForm({ onSave, onCancel, initialIngredient }: Ingredie
   const [fat, setFat] = useState(initialIngredient?.fatPer100?.toString() || '');
   const [carbs, setCarbs] = useState(initialIngredient?.carbsPer100?.toString() || '');
   const [fiber, setFiber] = useState(initialIngredient?.fiberPer100?.toString() || '');
+  const [mg, setMg] = useState(initialIngredient?.mgPer100?.toString() || '');
+  const [fe, setFe] = useState(initialIngredient?.fePer100?.toString() || '');
+  const [vitC, setVitC] = useState(initialIngredient?.vitCPer100?.toString() || '');
 
   const handleSubmit = () => {
     if (!name.trim()) return;
@@ -33,6 +36,9 @@ export function IngredientForm({ onSave, onCancel, initialIngredient }: Ingredie
       fatPer100: Number(fat) || 0,
       carbsPer100: Number(carbs) || 0,
       fiberPer100: Number(fiber) || 0,
+      mgPer100: Number(mg) || 0,
+      fePer100: Number(fe) || 0,
+      vitCPer100: Number(vitC) || 0,
     };
 
     onSave(ingredient);
@@ -55,58 +61,36 @@ export function IngredientForm({ onSave, onCancel, initialIngredient }: Ingredie
 
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
-          <label className="text-xs text-muted-foreground">Ккал/100г *</label>
-          <Input
-            type="number"
-            placeholder="0"
-            value={kcal}
-            onChange={(e) => setKcal(e.target.value)}
-            className="h-10"
-          />
+          <label className="text-xs text-muted-foreground">Ккал/100г</label>
+          <Input type="number" placeholder="0" value={kcal} onChange={(e) => setKcal(e.target.value)} className="h-10" />
         </div>
         <div className="space-y-1">
-          <label className="text-xs text-muted-foreground">Белки/100г *</label>
-          <Input
-            type="number"
-            step="0.1"
-            placeholder="0"
-            value={protein}
-            onChange={(e) => setProtein(e.target.value)}
-            className="h-10"
-          />
+          <label className="text-xs text-muted-foreground">Белки/100г</label>
+          <Input type="number" step="0.1" placeholder="0" value={protein} onChange={(e) => setProtein(e.target.value)} className="h-10" />
         </div>
         <div className="space-y-1">
-          <label className="text-xs text-muted-foreground">Жиры/100г *</label>
-          <Input
-            type="number"
-            step="0.1"
-            placeholder="0"
-            value={fat}
-            onChange={(e) => setFat(e.target.value)}
-            className="h-10"
-          />
+          <label className="text-xs text-muted-foreground">Жиры/100г</label>
+          <Input type="number" step="0.1" placeholder="0" value={fat} onChange={(e) => setFat(e.target.value)} className="h-10" />
         </div>
         <div className="space-y-1">
-          <label className="text-xs text-muted-foreground">Углеводы/100г *</label>
-          <Input
-            type="number"
-            step="0.1"
-            placeholder="0"
-            value={carbs}
-            onChange={(e) => setCarbs(e.target.value)}
-            className="h-10"
-          />
+          <label className="text-xs text-muted-foreground">Углеводы/100г</label>
+          <Input type="number" step="0.1" placeholder="0" value={carbs} onChange={(e) => setCarbs(e.target.value)} className="h-10" />
         </div>
-        <div className="space-y-1 col-span-2">
-          <label className="text-xs text-muted-foreground">Клетчатка/100г *</label>
-          <Input
-            type="number"
-            step="0.1"
-            placeholder="0"
-            value={fiber}
-            onChange={(e) => setFiber(e.target.value)}
-            className="h-10"
-          />
+        <div className="space-y-1">
+          <label className="text-xs text-muted-foreground">Клетчатка/100г</label>
+          <Input type="number" step="0.1" placeholder="0" value={fiber} onChange={(e) => setFiber(e.target.value)} className="h-10" />
+        </div>
+        <div className="space-y-1">
+          <label className="text-xs text-muted-foreground">Mg/100г (мг)</label>
+          <Input type="number" step="0.1" placeholder="0" value={mg} onChange={(e) => setMg(e.target.value)} className="h-10" />
+        </div>
+        <div className="space-y-1">
+          <label className="text-xs text-muted-foreground">Fe/100г (мг)</label>
+          <Input type="number" step="0.1" placeholder="0" value={fe} onChange={(e) => setFe(e.target.value)} className="h-10" />
+        </div>
+        <div className="space-y-1">
+          <label className="text-xs text-muted-foreground">Вит. C/100г (мг)</label>
+          <Input type="number" step="0.1" placeholder="0" value={vitC} onChange={(e) => setVitC(e.target.value)} className="h-10" />
         </div>
       </div>
 

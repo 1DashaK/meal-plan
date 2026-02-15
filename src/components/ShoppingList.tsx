@@ -35,19 +35,30 @@ export function ShoppingList({ weekPlan, recipes, ingredientBase }: ShoppingList
       ];
 
       allMeals.forEach((mealItem) => {
-        const recipe = recipes.find((r) => r.id === mealItem.recipeId);
-        if (!recipe) return;
+        const excluded = new Set(mealItem.excludedIngredientIds || []);
 
-        const totalRecipeWeight = calculateRecipeNutrition(recipe, ingredientBase).weight;
-        const ratio = totalRecipeWeight > 0 ? mealItem.portionWeight / totalRecipeWeight : 0;
-
-        recipe.ingredients.forEach((recipeIngredient) => {
-          const ingredientName = getIngredientName(recipeIngredient.ingredientId, ingredientBase);
-          const ingredientWeight = recipeIngredient.weight * ratio;
+        if (mealItem.type === 'ingredient') {
+          if (excluded.has(mealItem.recipeId)) return;
+          const ingredientName = getIngredientName(mealItem.recipeId, ingredientBase);
           const normalizedName = ingredientName.toLowerCase().trim();
           const existing = ingredientMap.get(normalizedName) || 0;
-          ingredientMap.set(normalizedName, existing + ingredientWeight);
-        });
+          ingredientMap.set(normalizedName, existing + mealItem.portionWeight);
+        } else {
+          const recipe = recipes.find((r) => r.id === mealItem.recipeId);
+          if (!recipe) return;
+
+          const totalRecipeWeight = calculateRecipeNutrition(recipe, ingredientBase).weight;
+          const ratio = totalRecipeWeight > 0 ? mealItem.portionWeight / totalRecipeWeight : 0;
+
+          recipe.ingredients.forEach((recipeIngredient) => {
+            if (excluded.has(recipeIngredient.ingredientId)) return;
+            const ingredientName = getIngredientName(recipeIngredient.ingredientId, ingredientBase);
+            const ingredientWeight = recipeIngredient.weight * ratio;
+            const normalizedName = ingredientName.toLowerCase().trim();
+            const existing = ingredientMap.get(normalizedName) || 0;
+            ingredientMap.set(normalizedName, existing + ingredientWeight);
+          });
+        }
       });
     });
 
@@ -83,9 +94,7 @@ export function ShoppingList({ weekPlan, recipes, ingredientBase }: ShoppingList
         <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
           <Check className="w-8 h-8 text-muted-foreground" />
         </div>
-        <h3 className="text-lg font-semibold text-foreground mb-2">
-          Список пуст
-        </h3>
+        <h3 className="text-lg font-semibold text-foreground mb-2">Список пуст</h3>
         <p className="text-muted-foreground text-sm max-w-[250px]">
           Добавьте блюда в план на неделю, и список покупок сформируется автоматически
         </p>
@@ -107,9 +116,7 @@ export function ShoppingList({ weekPlan, recipes, ingredientBase }: ShoppingList
           <div
             key={item.name}
             className={`flex items-center gap-3 p-3 rounded-lg transition-all cursor-pointer ${
-              item.checked
-                ? 'bg-success/10 opacity-60'
-                : 'bg-card border border-border/50'
+              item.checked ? 'bg-success/10 opacity-60' : 'bg-card border border-border/50'
             }`}
             onClick={() => toggleItem(item.name)}
           >
@@ -118,16 +125,10 @@ export function ShoppingList({ weekPlan, recipes, ingredientBase }: ShoppingList
               onCheckedChange={() => toggleItem(item.name)}
               className="h-5 w-5"
             />
-            <span
-              className={`flex-1 font-medium ${
-                item.checked ? 'line-through text-muted-foreground' : ''
-              }`}
-            >
+            <span className={`flex-1 font-medium ${item.checked ? 'line-through text-muted-foreground' : ''}`}>
               {item.name}
             </span>
-            <span className="text-sm text-muted-foreground">
-              {item.totalWeight}г
-            </span>
+            <span className="text-sm text-muted-foreground">{item.totalWeight}г</span>
           </div>
         ))}
       </div>
