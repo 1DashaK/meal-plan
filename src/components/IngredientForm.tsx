@@ -16,10 +16,11 @@ function generateId(): string {
 
 export function IngredientForm({ onSave, onCancel, initialIngredient }: IngredientFormProps) {
   const [name, setName] = useState(initialIngredient?.name || '');
-  const [kcal, setKcal] = useState(initialIngredient?.kcalPer100?.toString() || '');
   const [protein, setProtein] = useState(initialIngredient?.proteinPer100?.toString() || '');
   const [fat, setFat] = useState(initialIngredient?.fatPer100?.toString() || '');
   const [carbs, setCarbs] = useState(initialIngredient?.carbsPer100?.toString() || '');
+
+  const calculatedKcal = Math.round((Number(protein) || 0) * 4 + (Number(fat) || 0) * 9 + (Number(carbs) || 0) * 4);
   const [fiber, setFiber] = useState(initialIngredient?.fiberPer100?.toString() || '');
   const [mg, setMg] = useState(initialIngredient?.mgPer100?.toString() || '');
   const [fe, setFe] = useState(initialIngredient?.fePer100?.toString() || '');
@@ -31,7 +32,7 @@ export function IngredientForm({ onSave, onCancel, initialIngredient }: Ingredie
     const ingredient: BaseIngredient = {
       id: initialIngredient?.id || generateId(),
       name: name.trim(),
-      kcalPer100: Number(kcal) || 0,
+      kcalPer100: calculatedKcal,
       proteinPer100: Number(protein) || 0,
       fatPer100: Number(fat) || 0,
       carbsPer100: Number(carbs) || 0,
@@ -59,11 +60,12 @@ export function IngredientForm({ onSave, onCancel, initialIngredient }: Ingredie
         className="h-12"
       />
 
+      <div className="bg-accent/20 rounded-lg p-3 text-center">
+        <span className="text-sm text-muted-foreground">Ккал/100г (авто): </span>
+        <span className="font-bold text-foreground">{calculatedKcal}</span>
+      </div>
+
       <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-1">
-          <label className="text-xs text-muted-foreground">Ккал/100г</label>
-          <Input type="number" placeholder="0" value={kcal} onChange={(e) => setKcal(e.target.value)} className="h-10" />
-        </div>
         <div className="space-y-1">
           <label className="text-xs text-muted-foreground">Белки/100г</label>
           <Input type="number" step="0.1" placeholder="0" value={protein} onChange={(e) => setProtein(e.target.value)} className="h-10" />
