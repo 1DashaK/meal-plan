@@ -22,19 +22,18 @@ export function NutritionBadges({ nutrition, compact = false, showWeight = false
         <span className="nutrition-badge bg-secondary text-secondary-foreground">
           У:{nutrition.carbs}
         </span>
-        {(nutrition.mg > 0 || nutrition.fe > 0 || nutrition.vitC > 0) && (
-          <>
-            <span className="nutrition-badge bg-muted text-muted-foreground">
-              Mg:{nutrition.mg}
-            </span>
-            <span className="nutrition-badge bg-muted text-muted-foreground">
-              Fe:{nutrition.fe}
-            </span>
-            <span className="nutrition-badge bg-muted text-muted-foreground">
-              C:{nutrition.vitC}
-            </span>
-          </>
-        )}
+        <span className="nutrition-badge bg-success/15 text-success">
+          Кл:{nutrition.fiber}
+        </span>
+        <span className="nutrition-badge bg-muted text-muted-foreground">
+          Mg:{nutrition.mg}
+        </span>
+        <span className="nutrition-badge bg-muted text-muted-foreground">
+          Fe:{nutrition.fe}
+        </span>
+        <span className="nutrition-badge bg-muted text-muted-foreground">
+          C:{nutrition.vitC}
+        </span>
       </div>
     );
   }
@@ -56,19 +55,15 @@ export function NutritionBadges({ nutrition, compact = false, showWeight = false
       <span className="nutrition-badge bg-success/15 text-success">
         Кл: {nutrition.fiber}г
       </span>
-      {(nutrition.mg > 0 || nutrition.fe > 0 || nutrition.vitC > 0) && (
-        <>
-          <span className="nutrition-badge bg-muted text-muted-foreground">
-            Mg: {nutrition.mg}мг
-          </span>
-          <span className="nutrition-badge bg-muted text-muted-foreground">
-            Fe: {nutrition.fe}мг
-          </span>
-          <span className="nutrition-badge bg-muted text-muted-foreground">
-            C: {nutrition.vitC}мг
-          </span>
-        </>
-      )}
+      <span className="nutrition-badge bg-muted text-muted-foreground">
+        Mg: {nutrition.mg}мг
+      </span>
+      <span className="nutrition-badge bg-muted text-muted-foreground">
+        Fe: {nutrition.fe}мг
+      </span>
+      <span className="nutrition-badge bg-muted text-muted-foreground">
+        C: {nutrition.vitC}мг
+      </span>
       {showWeight && (
         <span className="nutrition-badge bg-muted text-muted-foreground">
           ⚖️ {nutrition.weight}г
