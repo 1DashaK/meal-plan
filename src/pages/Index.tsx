@@ -163,8 +163,8 @@ const Index = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background pb-20">
-      <header className="sticky top-0 z-40 bg-background/95 backdrop-blur border-b">
+    <div className="min-h-screen bg-background pb-20 w-full" style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'calc(5rem + env(safe-area-inset-bottom))' }}>
+      <header className="sticky top-0 z-40 bg-background/95 backdrop-blur border-b w-full">
         <div className="container py-3 flex items-center justify-between">
           <h1 className="text-xl font-bold text-foreground flex items-center gap-2">
             <span className="text-2xl">🥗</span> Планировщик питания
@@ -279,7 +279,7 @@ const Index = () => {
         )}
       </main>
 
-      <nav className="fixed bottom-0 left-0 right-0 bg-card border-t shadow-lg">
+      <nav className="fixed bottom-0 left-0 right-0 bg-card border-t shadow-lg w-full" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
         <div className="container">
           <div className="flex">
             {tabs.map((tab) => {
