@@ -508,15 +508,24 @@ export function RecipeSelectorModal({
           )}
         </div>
 
-        <div className="p-4 border-t">
-          <Button
-            onClick={selectedItems.length > 0 ? handleProceedToConfirm : undefined}
-            disabled={selectedItems.length === 0}
-            className="w-full h-12"
-          >
-            <Check className="w-5 h-5 mr-2" />
-            Сохранить ({selectedItems.length})
-          </Button>
+        <div className="p-4 border-t flex gap-2">
+          {selectedItems.length === 0 ? (
+            <Button
+              onClick={() => { onSave([]); onClose(); }}
+              variant="destructive"
+              className="w-full h-12"
+            >
+              Очистить приём пищи
+            </Button>
+          ) : (
+            <Button
+              onClick={handleProceedToConfirm}
+              className="w-full h-12"
+            >
+              <Check className="w-5 h-5 mr-2" />
+              Сохранить ({selectedItems.length})
+            </Button>
+          )}
         </div>
       </div>
     </div>
