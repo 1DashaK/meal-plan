@@ -279,7 +279,7 @@ const Index = () => {
         )}
       </main>
 
-      <nav className="fixed bottom-0 left-0 right-0 bg-card border-t shadow-lg">
+      <nav className="fixed bottom-0 left-0 right-0 bg-card border-t shadow-lg w-full" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
         <div className="container">
           <div className="flex">
             {tabs.map((tab) => {
