@@ -11,6 +11,7 @@ import { NutritionBadges } from '@/components/NutritionBadges';
 import { IngredientForm } from '@/components/IngredientForm';
 import { IngredientCard } from '@/components/IngredientCard';
 import { TagFilter } from '@/components/TagFilter';
+import { ImportExport } from '@/components/ImportExport';
 import { getCurrentWeekKey, getWeekRange, navigateWeek } from '@/utils/weekUtils';
 import { calculateDayNutrition, emptyNutrition } from '@/utils/nutrition';
 
@@ -97,6 +98,24 @@ const Index = () => {
     ? recipes.filter((recipe) => selectedTags.every((tag) => recipe.tags?.includes(tag)))
     : recipes;
 
+  // Import handler
+  const handleImport = (data: { recipes?: Recipe[]; ingredientBase?: BaseIngredient[] }) => {
+    if (data.ingredientBase) {
+      const existingIds = new Set(ingredientBase.map((i) => i.id));
+      const newItems = data.ingredientBase.filter((i) => !existingIds.has(i.id));
+      setIngredientBase([...ingredientBase, ...newItems]);
+    }
+    if (data.recipes) {
+      const existingIds = new Set(recipes.map((r) => r.id));
+      const newItems = data.recipes.filter((r) => !existingIds.has(r.id));
+      setRecipes([...recipes, ...newItems]);
+      // Also import tags
+      const newTags = new Set(recipeTags);
+      data.recipes.forEach((r) => r.tags?.forEach((t) => newTags.add(t)));
+      setRecipeTags(Array.from(newTags));
+    }
+  };
+
   // Week plan handlers
   const handleUpdateMeal = (dayIndex: number, mealType: MealType, items: MealItem[]) => {
     setWeekPlans((prev) => ({
@@ -146,10 +165,11 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background pb-20">
       <header className="sticky top-0 z-40 bg-background/95 backdrop-blur border-b">
-        <div className="container py-3">
+        <div className="container py-3 flex items-center justify-between">
           <h1 className="text-xl font-bold text-foreground flex items-center gap-2">
             <span className="text-2xl">🥗</span> Планировщик питания
           </h1>
+          <ImportExport recipes={recipes} ingredientBase={ingredientBase} onImport={handleImport} />
         </div>
       </header>
 

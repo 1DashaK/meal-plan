@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { X, Check, Plus, Minus, Search, Filter, Apple, ChefHat, ArrowLeft } from 'lucide-react';
+import { X, Check, Plus, Minus, Search, Filter, Apple, ChefHat, ArrowLeft, CheckSquare, Square } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -27,6 +27,7 @@ const mealLabels: Record<MealType, string> = {
 
 type FilterMode = 'and' | 'or';
 type ViewStep = 'select' | 'confirm';
+type PortionMode = 'grams' | 'portions';
 
 interface IngredientForConfirmation {
   ingredientId: string;
@@ -52,6 +53,7 @@ export function RecipeSelectorModal({
   const [filterMode, setFilterMode] = useState<FilterMode>('and');
   const [viewStep, setViewStep] = useState<ViewStep>('select');
   const [confirmIngredients, setConfirmIngredients] = useState<IngredientForConfirmation[]>([]);
+  const [portionModes, setPortionModes] = useState<Record<string, PortionMode>>({});
 
   const filteredRecipes = useMemo(() => {
     let result = recipes;
@@ -76,6 +78,12 @@ export function RecipeSelectorModal({
   }, [ingredientBase, searchQuery]);
 
   if (!isOpen) return null;
+
+  const getRecipeTotalWeight = (recipeId: string) => {
+    const recipe = recipes.find((r) => r.id === recipeId);
+    if (!recipe) return 0;
+    return calculateRecipeNutrition(recipe, ingredientBase).weight;
+  };
 
   const handleToggleRecipe = (recipe: Recipe) => {
     const existing = selectedItems.find((item) => item.recipeId === recipe.id && item.type !== 'ingredient');
@@ -116,12 +124,29 @@ export function RecipeSelectorModal({
     );
   };
 
+  const handlePortionCountChange = (id: string, count: number, totalWeight: number) => {
+    const weight = Math.round(totalWeight * Math.max(0.1, count));
+    setSelectedItems(
+      selectedItems.map((item) =>
+        item.recipeId === id && (item.type || 'recipe') !== 'ingredient'
+          ? { ...item, portionWeight: weight }
+          : item
+      )
+    );
+  };
+
+  const togglePortionMode = (id: string) => {
+    setPortionModes((prev) => ({
+      ...prev,
+      [id]: prev[id] === 'portions' ? 'grams' : 'portions',
+    }));
+  };
+
   const handleTagToggle = (tag: string) => {
     setFilterTags((prev) => prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]);
   };
 
   const handleProceedToConfirm = () => {
-    // Build ingredient list from all selected items
     const ingredientMap = new Map<string, { name: string; weight: number }>();
 
     selectedItems.forEach((item) => {
@@ -180,6 +205,19 @@ export function RecipeSelectorModal({
     setViewStep('select');
   };
 
+  const handleSelectAllConfirm = () => {
+    setConfirmIngredients((prev) => prev.map((i) => ({ ...i, checked: true })));
+  };
+
+  const handleDeselectAllConfirm = () => {
+    setConfirmIngredients((prev) => prev.map((i) => ({ ...i, checked: false })));
+  };
+
+  // Delete selected item
+  const handleRemoveItem = (id: string, type: string) => {
+    setSelectedItems(selectedItems.filter((item) => !(item.recipeId === id && (item.type || 'recipe') === type)));
+  };
+
   // Confirmation view
   if (viewStep === 'confirm') {
     return (
@@ -198,9 +236,19 @@ export function RecipeSelectorModal({
           </div>
 
           <div className="flex-1 overflow-y-auto p-4 space-y-2">
-            <p className="text-sm text-muted-foreground mb-3">
-              Снимите галочку с ингредиентов, которые не нужно добавлять в список покупок:
-            </p>
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-sm text-muted-foreground">
+                Снимите галочку с ингредиентов, которые не нужно добавлять в список покупок:
+              </p>
+            </div>
+            <div className="flex gap-2 mb-3">
+              <Button variant="outline" size="sm" className="gap-1 text-xs" onClick={handleSelectAllConfirm}>
+                <CheckSquare className="w-3.5 h-3.5" /> Выбрать все
+              </Button>
+              <Button variant="outline" size="sm" className="gap-1 text-xs" onClick={handleDeselectAllConfirm}>
+                <Square className="w-3.5 h-3.5" /> Снять все
+              </Button>
+            </div>
             {confirmIngredients.map((item) => (
               <div
                 key={item.ingredientId}
@@ -276,57 +324,30 @@ export function RecipeSelectorModal({
             <div className="bg-card rounded-lg p-3 border border-border/50 space-y-2 animate-fade-in">
               <div className="flex items-center gap-3 text-xs">
                 <label className="flex items-center gap-1 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="filterMode"
-                    checked={filterMode === 'and'}
-                    onChange={() => setFilterMode('and')}
-                    className="accent-primary"
-                  />
+                  <input type="radio" name="filterMode" checked={filterMode === 'and'}
+                    onChange={() => setFilterMode('and')} className="accent-primary" />
                   Пересечение (И)
                 </label>
                 <label className="flex items-center gap-1 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="filterMode"
-                    checked={filterMode === 'or'}
-                    onChange={() => setFilterMode('or')}
-                    className="accent-primary"
-                  />
+                  <input type="radio" name="filterMode" checked={filterMode === 'or'}
+                    onChange={() => setFilterMode('or')} className="accent-primary" />
                   Объединение (ИЛИ)
                 </label>
               </div>
               <div className="flex flex-wrap gap-1.5">
                 {allTags.map((tag) => (
-                  <button
-                    key={tag}
-                    onClick={() => handleTagToggle(tag)}
+                  <button key={tag} onClick={() => handleTagToggle(tag)}
                     className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
                       filterTags.includes(tag)
                         ? 'bg-primary text-primary-foreground border-primary'
                         : 'bg-card text-foreground border-border hover:bg-accent'
                     }`}
-                  >
-                    {tag}
-                  </button>
+                  >{tag}</button>
                 ))}
               </div>
               <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-7 text-xs"
-                  onClick={() => setFilterTags([])}
-                >
-                  Сбросить
-                </Button>
-                <Button
-                  size="sm"
-                  className="h-7 text-xs"
-                  onClick={() => setShowFilter(false)}
-                >
-                  Применить
-                </Button>
+                <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => setFilterTags([])}>Сбросить</Button>
+                <Button size="sm" className="h-7 text-xs" onClick={() => setShowFilter(false)}>Применить</Button>
               </div>
             </div>
           )}
@@ -346,10 +367,12 @@ export function RecipeSelectorModal({
                 const portionNutrition = selectedItem
                   ? calculatePortionNutrition(recipe, selectedItem.portionWeight, ingredientBase)
                   : null;
+                const mode = portionModes[recipe.id] || 'grams';
+                const totalWeight = nutrition.weight;
+                const portionCount = totalWeight > 0 ? Math.round((selectedItem?.portionWeight || totalWeight) / totalWeight * 10) / 10 : 1;
 
                 return (
-                  <div
-                    key={recipe.id}
+                  <div key={recipe.id}
                     className={`rounded-xl p-3 border-2 transition-all ${
                       isSelected ? 'border-primary bg-primary/5' : 'border-transparent bg-secondary/50'
                     }`}
@@ -370,22 +393,42 @@ export function RecipeSelectorModal({
 
                     {isSelected && selectedItem && (
                       <div className="mt-3 pt-3 border-t border-border/50 space-y-2">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm text-muted-foreground">Порция:</span>
-                          <div className="flex items-center gap-1">
-                            <Button variant="outline" size="icon" className="h-8 w-8"
-                              onClick={() => handlePortionChange(recipe.id, 'recipe', selectedItem.portionWeight - 50)}>
-                              <Minus className="w-4 h-4" />
-                            </Button>
-                            <Input type="number" value={selectedItem.portionWeight}
-                              onChange={(e) => handlePortionChange(recipe.id, 'recipe', Number(e.target.value))}
-                              className="w-20 h-8 text-center" />
-                            <span className="text-sm text-muted-foreground">г</span>
-                            <Button variant="outline" size="icon" className="h-8 w-8"
-                              onClick={() => handlePortionChange(recipe.id, 'recipe', selectedItem.portionWeight + 50)}>
-                              <Plus className="w-4 h-4" />
-                            </Button>
-                          </div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <Button variant="ghost" size="sm" className="h-7 text-xs px-2"
+                            onClick={() => togglePortionMode(recipe.id)}>
+                            {mode === 'grams' ? 'Граммы' : 'Порции'} ↔
+                          </Button>
+                          {mode === 'grams' ? (
+                            <div className="flex items-center gap-1">
+                              <Button variant="outline" size="icon" className="h-8 w-8"
+                                onClick={() => handlePortionChange(recipe.id, 'recipe', selectedItem.portionWeight - 50)}>
+                                <Minus className="w-4 h-4" />
+                              </Button>
+                              <Input type="number" value={selectedItem.portionWeight}
+                                onChange={(e) => handlePortionChange(recipe.id, 'recipe', Number(e.target.value))}
+                                className="w-20 h-8 text-center" />
+                              <span className="text-sm text-muted-foreground">г</span>
+                              <Button variant="outline" size="icon" className="h-8 w-8"
+                                onClick={() => handlePortionChange(recipe.id, 'recipe', selectedItem.portionWeight + 50)}>
+                                <Plus className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-1">
+                              <Button variant="outline" size="icon" className="h-8 w-8"
+                                onClick={() => handlePortionCountChange(recipe.id, portionCount - 0.5, totalWeight)}>
+                                <Minus className="w-4 h-4" />
+                              </Button>
+                              <Input type="number" value={portionCount} step="0.1"
+                                onChange={(e) => handlePortionCountChange(recipe.id, Number(e.target.value), totalWeight)}
+                                className="w-20 h-8 text-center" />
+                              <span className="text-sm text-muted-foreground">порц.</span>
+                              <Button variant="outline" size="icon" className="h-8 w-8"
+                                onClick={() => handlePortionCountChange(recipe.id, portionCount + 0.5, totalWeight)}>
+                                <Plus className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          )}
                         </div>
                         {portionNutrition && <NutritionBadges nutrition={portionNutrition} compact />}
                       </div>
@@ -410,8 +453,7 @@ export function RecipeSelectorModal({
                   : null;
 
                 return (
-                  <div
-                    key={ingredient.id}
+                  <div key={ingredient.id}
                     className={`rounded-xl p-3 border-2 transition-all ${
                       isSelected ? 'border-primary bg-primary/5' : 'border-transparent bg-secondary/50'
                     }`}
