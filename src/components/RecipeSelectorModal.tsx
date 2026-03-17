@@ -125,11 +125,12 @@ export function RecipeSelectorModal({
   };
 
   const handlePortionCountChange = (id: string, count: number, totalWeight: number) => {
-    const weight = Math.round(totalWeight * Math.max(0.1, count));
+    const safeCount = Math.max(0.01, count);
+    const weight = Math.round(totalWeight * safeCount * 100) / 100;
     setSelectedItems(
       selectedItems.map((item) =>
         item.recipeId === id && (item.type || 'recipe') !== 'ingredient'
-          ? { ...item, portionWeight: weight }
+          ? { ...item, portionWeight: Math.max(1, Math.round(weight)) }
           : item
       )
     );
