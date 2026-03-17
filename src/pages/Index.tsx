@@ -164,12 +164,14 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background pb-20 w-full" style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'calc(5rem + env(safe-area-inset-bottom))' }}>
-      <header className="sticky top-0 z-40 bg-background/95 backdrop-blur border-b w-full">
-        <div className="container py-3 flex items-center justify-between">
-          <h1 className="text-xl font-bold text-foreground flex items-center gap-2">
-            <span className="text-2xl">🥗</span> Планировщик питания
+      <header className="sticky top-0 z-40 bg-background/95 backdrop-blur border-b w-full" style={{ paddingLeft: 'env(safe-area-inset-left)', paddingRight: 'env(safe-area-inset-right)' }}>
+        <div className="px-4 py-3 flex items-center justify-between gap-2 min-w-0">
+          <h1 className="text-lg font-bold text-foreground flex items-center gap-2 truncate min-w-0">
+            <span className="text-xl flex-shrink-0">🥗</span> <span className="truncate">Планировщик питания</span>
           </h1>
-          <ImportExport recipes={recipes} ingredientBase={ingredientBase} onImport={handleImport} />
+          <div className="flex-shrink-0">
+            <ImportExport recipes={recipes} ingredientBase={ingredientBase} onImport={handleImport} />
+          </div>
         </div>
       </header>
 
