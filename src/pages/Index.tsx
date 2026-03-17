@@ -281,8 +281,8 @@ const Index = () => {
         )}
       </main>
 
-      <nav className="fixed bottom-0 left-0 right-0 bg-card border-t shadow-lg w-full" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
-        <div className="container">
+      <nav className="fixed bottom-0 left-0 right-0 bg-card border-t shadow-lg w-full" style={{ paddingBottom: 'env(safe-area-inset-bottom)', paddingLeft: 'env(safe-area-inset-left)', paddingRight: 'env(safe-area-inset-right)' }}>
+        <div className="px-4">
           <div className="flex">
             {tabs.map((tab) => {
               const Icon = tab.icon;
