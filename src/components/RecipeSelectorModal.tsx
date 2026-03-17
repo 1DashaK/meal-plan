@@ -125,11 +125,12 @@ export function RecipeSelectorModal({
   };
 
   const handlePortionCountChange = (id: string, count: number, totalWeight: number) => {
-    const weight = Math.round(totalWeight * Math.max(0.1, count));
+    const safeCount = Math.max(0.01, count);
+    const weight = Math.round(totalWeight * safeCount * 100) / 100;
     setSelectedItems(
       selectedItems.map((item) =>
         item.recipeId === id && (item.type || 'recipe') !== 'ingredient'
-          ? { ...item, portionWeight: weight }
+          ? { ...item, portionWeight: Math.max(1, Math.round(weight)) }
           : item
       )
     );
@@ -419,8 +420,11 @@ export function RecipeSelectorModal({
                                 onClick={() => handlePortionCountChange(recipe.id, portionCount - 0.5, totalWeight)}>
                                 <Minus className="w-4 h-4" />
                               </Button>
-                              <Input type="number" value={portionCount} step="0.1"
-                                onChange={(e) => handlePortionCountChange(recipe.id, Number(e.target.value), totalWeight)}
+                              <Input type="number" value={portionCount} step="any" inputMode="decimal"
+                                onChange={(e) => {
+                                  const val = parseFloat(e.target.value);
+                                  if (!isNaN(val)) handlePortionCountChange(recipe.id, val, totalWeight);
+                                }}
                                 className="w-20 h-8 text-center" />
                               <span className="text-sm text-muted-foreground">порц.</span>
                               <Button variant="outline" size="icon" className="h-8 w-8"
