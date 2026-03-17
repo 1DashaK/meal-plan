@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Search, Plus } from 'lucide-react';
+import { Search, Plus, ExternalLink } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { BaseIngredient } from '@/types/mealPlanner';
@@ -31,6 +31,14 @@ export function IngredientSelector({ ingredientBase, onSelect, excludeIds = [] }
     setShowResults(false);
   };
 
+  const handleSearchOnline = (site: 'fitaudit' | 'healthdiet') => {
+    const query = encodeURIComponent(searchQuery.trim());
+    const url = site === 'fitaudit'
+      ? `https://fitaudit.ru/food?search=${query}`
+      : `https://health-diet.ru/table_calorie/?search=${query}`;
+    window.open(url, '_blank');
+  };
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
@@ -41,6 +49,8 @@ export function IngredientSelector({ ingredientBase, onSelect, excludeIds = [] }
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  const noLocalResults = searchQuery.trim() && filteredIngredients.length === 0;
 
   return (
     <div ref={containerRef} className="relative">
@@ -77,13 +87,29 @@ export function IngredientSelector({ ingredientBase, onSelect, excludeIds = [] }
                 <Plus className="w-4 h-4 text-primary" />
               </button>
             ))
-          ) : (
-            <div className="px-3 py-4 text-center text-sm text-muted-foreground">
-              {searchQuery ? (
-                <p>Ингредиент не найден. Добавьте его во вкладке "Ингредиенты"</p>
-              ) : (
-                <p>Начните вводить название</p>
-              )}
+          ) : null}
+          {noLocalResults && (
+            <div className="px-3 py-3 space-y-2">
+              <p className="text-sm text-muted-foreground text-center">Ингредиент не найден.</p>
+              <p className="text-xs text-muted-foreground text-center">Посмотреть онлайн?</p>
+              <div className="flex flex-col gap-1.5">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full gap-1.5 text-xs"
+                  onClick={() => handleSearchOnline('fitaudit')}
+                >
+                  <ExternalLink className="w-3.5 h-3.5" /> FitAudit.ru
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full gap-1.5 text-xs"
+                  onClick={() => handleSearchOnline('healthdiet')}
+                >
+                  <ExternalLink className="w-3.5 h-3.5" /> Health-Diet.ru
+                </Button>
+              </div>
             </div>
           )}
         </div>

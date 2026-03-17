@@ -175,7 +175,7 @@ const Index = () => {
         </div>
       </header>
 
-      <main className="container py-4">
+      <main className="px-4 py-4" style={{ paddingLeft: 'max(1rem, env(safe-area-inset-left))', paddingRight: 'max(1rem, env(safe-area-inset-right))' }}>
         {activeTab === 'ingredients' && (
           <div className="space-y-4 animate-fade-in">
             {showIngredientForm ? (
